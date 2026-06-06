@@ -1,21 +1,28 @@
 # Single Stock Multi-Agent Analysis Skill
 
-`single-stock-multi-agent-analysis` is a Codex skill for producing sourced, risk-aware single-stock research reports. It is designed for one ticker or company at a time, including A-shares, Hong Kong stocks, US stocks, and ETF-like equities.
+`single-stock-multi-agent-analysis` is a Codex skill for producing sourced, risk-aware single-stock research reports. It is designed for one already-screened ticker or company at a time, including A-shares, Hong Kong stocks, US stocks, and ETF-like equities.
 
-The skill does not make unconditional trading calls. When a user asks whether to buy or sell, it frames the answer with scenarios, risk controls, invalidation points, data freshness, and source limitations.
+The skill does not make unconditional trading calls. When a user asks whether to buy or sell, it frames the answer with a 10-agent research committee, structured scorecard, scenario analysis, risk controls, invalidation points, data freshness, and source limitations.
 
 ## What It Does
 
 - Classifies the stock request by ticker, market, time horizon, and output need.
 - Checks local Python dependencies before analysis.
 - Collects fresh market data, filings, announcements, news, and comparable context.
-- Runs four independent analysis tracks:
-  - Sentiment, news, and announcements
-  - Fundamentals and financial quality
-  - K-line, technicals, and trading structure
-  - Valuation, comparables, and risk
-- Forces the tracks to challenge each other before producing the final view.
-- Generates a Markdown report and, when OHLCV data is available, a simple price trend chart.
+- Runs ten independent analysis agents:
+  - Data Steward
+  - News and Catalyst
+  - Industry and Macro
+  - Business and Moat
+  - Financial Quality
+  - Valuation
+  - Technical and Trading
+  - Flow and Positioning
+  - Risk Officer
+  - Portfolio/Trade Planner
+- Forces the agents to challenge each other before producing the final committee view.
+- Scores each dimension from `-2` to `+2`, with confidence, evidence grade, and kill switches.
+- Generates a Markdown report, machine-checkable scorecard JSON, and, when OHLCV data is available, a simple price trend chart.
 
 ## Repository Structure
 
@@ -24,8 +31,15 @@ single-stock-multi-agent-analysis/
 ├── SKILL.md
 ├── agents/
 │   └── openai.yaml
+├── references/
+│   ├── agent_roles.md
+│   ├── report_template.md
+│   ├── scorecard_schema.md
+│   └── source_quality.md
 └── scripts/
-    └── check_dependencies.py
+    ├── aggregate_scorecard.py
+    ├── check_dependencies.py
+    └── validate_scorecard.py
 ```
 
 The installable Codex skill is the `single-stock-multi-agent-analysis/` directory.
@@ -82,6 +96,8 @@ Install missing packages into the selected Python environment:
 <python> -m pip install akshare pandas numpy matplotlib
 ```
 
+The scorecard helper scripts use only the Python standard library.
+
 ## Optional Codex Capabilities
 
 The skill explicitly checks and discloses runtime capability status before analysis:
@@ -95,10 +111,32 @@ The skill explicitly checks and discloses runtime capability status before analy
 
 If true subagent execution is unavailable, the skill falls back to labeled sequential memos for each analysis track.
 
+## Scorecard Workflow
+
+Full analyses should save a scorecard JSON under:
+
+```text
+reports/<ticker>/<ticker>_<company>_scorecard_<YYYY-MM-DD>.json
+```
+
+Validate the schema:
+
+```bash
+python3 ~/.codex/skills/single-stock-multi-agent-analysis/scripts/validate_scorecard.py <scorecard.json>
+```
+
+Aggregate the final rating:
+
+```bash
+python3 ~/.codex/skills/single-stock-multi-agent-analysis/scripts/aggregate_scorecard.py <scorecard.json> --pretty
+```
+
+Default ratings are `Strong Buy`, `Buy`, `Watch`, `Avoid`, and `Sell Risk`. The default horizon is `1-8 weeks` unless the user specifies a different horizon.
+
 ## Example Prompts
 
 ```text
-Use $single-stock-multi-agent-analysis to analyze 600353.SH with a 1-4 week horizon and save a full Markdown report.
+Use $single-stock-multi-agent-analysis to analyze 600353.SH with a 1-8 week horizon and save a full Markdown report plus scorecard JSON.
 ```
 
 ```text
@@ -122,13 +160,13 @@ A complete report includes:
 - Core conclusion, confidence, timestamp, and timezone
 - Method table and multi-agent interaction summary
 - Data source and freshness table
+- 10-agent structured scorecard
 - Key metrics table
-- Sentiment and announcement analysis
-- Fundamentals analysis
-- Technical/K-line analysis
-- Valuation and peer comparison
+- Individual agent memos
+- Debate and reconciliation summary
+- Trade plan with entry zone, add/reduce triggers, stop loss, take profit, invalidation, and position sizing
+- Risk register with probability, impact, monitoring signal, and action if triggered
 - Bull, base, and bear scenarios
-- Risk checklist
 - Follow-up monitoring list
 - Source links
 
@@ -138,4 +176,3 @@ A complete report includes:
 - Forums and social sentiment should be treated as low-confidence unless corroborated.
 - Official filings and exchange/company disclosures should be prioritized over media summaries.
 - The skill is for research support and does not provide personalized financial advice.
-

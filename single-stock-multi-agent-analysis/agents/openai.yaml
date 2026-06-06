@@ -1,4 +1,4 @@
 interface:
   display_name: "Single Stock Multi-Agent Analysis"
-  short_description: "Run a sourced multi-agent single-stock deep dive"
-  default_prompt: "Use $single-stock-multi-agent-analysis to analyze one stock with independent agents, fresh data, technicals, sentiment, fundamentals, valuation, and a final report."
+  short_description: "Run a sourced 10-agent single-stock deep dive"
+  default_prompt: "Use $single-stock-multi-agent-analysis to analyze one already-screened stock with a 10-agent committee, fresh data, structured scorecard, trade plan, risk controls, and a final report."
